@@ -1,0 +1,19 @@
+{
+  "name": "rise",
+  "version": "0.0.1",
+  "description": "Minimalist streaming logger with multi-transport support",
+  "keywords": [],
+  "author": "Matthew Mueller <matt@lapwinglabs.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/lapwinglabs/rise.git"
+  },
+  "dependencies": {
+    "multipipe": "^0.1.2"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "should": "*"
+  },
+  "main": "index"
+}
