@@ -35,14 +35,12 @@ postgres.debug('running query %s', query)
 
 ## Levels
 
-Here are the log levels that ship with sutra
-
-- trace: finer-grained informational events than the debug
-- debug: fine-grained informational events that are most useful to debug an application
-- info: informational messages that highlight the progress of the application at coarse-grained level
-- warn: potentially harmful situations
-- error: error events that might still allow the application to continue running.
-- fatal: very severe error events that will presumably lead the application to abort.
+- **trace**: finer-grained informational events than the debug
+- **debug**: fine-grained informational events that are most useful to debug an application
+- **info**: informational messages that highlight the progress of the application at coarse-grained level
+- **warn**: potentially harmful situations
+- **error**: error events that might still allow the application to continue running.
+- **fatal**: very severe error events that will presumably lead the application to abort.
 
 ## Tests
 
