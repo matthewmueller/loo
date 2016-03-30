@@ -9,7 +9,6 @@
     "url": "git://github.com/MatthewMueller/sutra.git"
   },
   "dependencies": {
-    "component-clone": "0.2.2",
     "json-stringify-safe": "5.0.1",
     "object-assign": "4.0.1",
     "sliced": "1.0.1"
