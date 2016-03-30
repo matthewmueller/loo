@@ -18,18 +18,28 @@ let log = require('sutra')
 
 // application logging
 let app = log('app')
+
+// direct everything to a papertrail stream
+app.pipe(papertrail(creds))
+
+// direct error & fatal levels to process.stderr
 app.error.pipe(process.stderr)
 app.fatal.pipe(process.stderr)
 
-// component logging
+// postgres service logging
 let postgres = app('postgres')
+
+// log the postgres debug & info events to stdout
 postgres.debug.pipe(process.stdout)
 postgres.info.pipe(process.stdout)
 
-// add custom fields and log
 let query = 'SELECT * FROM teams'
 let client = Postgres(url)
+
+// add custom fields
 postgres.debug.fields({ client: client.id })
+
+// log out with printf support
 postgres.debug('running query %s', query)
 ```
 
