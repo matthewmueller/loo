@@ -1,8 +1,15 @@
 {
   "name": "sutra",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Minimalistic streaming logger with layered transport support",
-  "keywords": ["logging", "transports", "stream", "streaming", "simple", "logs"],
+  "keywords": [
+    "logging",
+    "transports",
+    "stream",
+    "streaming",
+    "simple",
+    "logs"
+  ],
   "author": "Matthew Mueller <mattmuelle@gmail.com>",
   "repository": {
     "type": "git",
