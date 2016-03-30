@@ -1,19 +1,25 @@
 {
-  "name": "rise",
-  "version": "0.0.1",
-  "description": "Minimalist streaming logger with multi-transport support",
-  "keywords": [],
-  "author": "Matthew Mueller <matt@lapwinglabs.com>",
+  "name": "sutra",
+  "version": "1.0.0",
+  "description": "Minimalistic streaming logger with layered transport support",
+  "keywords": ["logging", "transports", "stream", "streaming", "simple", "logs"],
+  "author": "Matthew Mueller <mattmuelle@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "git://github.com/lapwinglabs/rise.git"
+    "url": "git://github.com/MatthewMueller/sutra.git"
   },
   "dependencies": {
-    "multipipe": "^0.1.2"
+    "component-clone": "0.2.2",
+    "json-stringify-safe": "5.0.1",
+    "object-assign": "4.0.1",
+    "sliced": "1.0.1"
   },
   "devDependencies": {
-    "mocha": "*",
-    "should": "*"
+    "bl": "1.1.2",
+    "mocha": "2.4.5"
   },
-  "main": "index"
+  "scripts": {
+    "test": "make test"
+  },
+  "main": "index.js"
 }

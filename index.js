@@ -1,108 +1,171 @@
+'use strict'
+
 /**
  * Module Dependencies
  */
 
-var Passthrough = require('stream').PassThrough
-var os = require('os')
+let levels = 'trace debug info warn error fatal'.split(' ')
+let is_printf = require('./lib/is-printf')
+let assign = require('object-assign')
+let format = require('./lib/format')
+let printf = require('util').format
+let sliced = require('sliced')
 
 /**
- * Constants
+ * Export a `Logger` singleton
  */
 
-var hostname = os.hostname()
-var pid = process.pid
+module.exports = Logger('root')
 
 /**
- * Default levels
+ * Create a `Logger`
+ *
+ * @param {String} namespace
+ * @param {Object} transports
+ * @param {Object} fields
+ * @return {logger} function
+ * @private true
  */
 
-var levels = ['info', 'warn', 'error', 'fatal']
+function Logger (namespace, transports, fields) {
+  transports = transports ? copy(transports) : {}
+  fields = fields ? copy(fields) : {}
 
-/**
- * Export `Rise`
- */
-
-function Rise (name, options) {
-  options = options || {}
-
-  var transports = options.transports = append(options.transports || {})
-  var formatter = options.format = options.format || format
-
-  function rise (sub) {
-    return new Rise(name + ':' + sub, options)
+  // create a logger
+  function logger (ns) {
+    let name = namespace.split(':')
+    name = name[0] === 'root' ? name.slice(1) : name
+    ns = name.concat(ns).join(':')
+    return Logger(ns, transports, fields)
   }
 
-  rise.trace = create('trace')
-  rise.debug = create('debug')
-  rise.info = create('info')
-  rise.warn = create('warn')
-  rise.error = create('error')
-  rise.fatal = create('fatal')
-  rise.all = all
+  // go to all levels
+  logger.fields = Fields()
+  logger.reset = Reset()
+  logger.pipe = Pipe()
 
-  rise.format = function (fmt) {
-    formatter = fmt
-    return rise
-  }
+  // setup the levels
+  levels.map(function (level) {
+    logger[level] = Log(level)
+  })
 
-  function create (level) {
-    return function log (message) {
-      if (!arguments.length) return transport(level)
+  return logger
 
-      var streams = transports[level].length
-        ? transports[level]
-        : []
+  // create the logger for the given `level`
+  function Log (level) {
+    function log (message) {
+      let json = prepare(level, namespace, sliced(arguments))
+      json = assign(json, fields['$all'] || {}, fields[level] || {})
+      let globals = transports['$all'] || []
+      let locals = transports[level] || []
+      let streams = [].concat(locals).concat(globals)
 
-      for (var i = 0; stream = streams[i]; i++) {
-        stream.write(formatter(level, name, message))
+      for (let i = 0, stream; stream = streams[i]; i++) {
+        stream.write(format(json))
       }
     }
+
+    log.fields = Fields(level)
+    log.pipe = Pipe(level)
+
+    return log
   }
 
-  function append (obj) {
-    var out = {}
-    for (var i = 0, level; level = levels[i]; i++) {
-      out[level] = obj[level] ? [].concat(obj[level]) : []
-    }
-    return out
-  }
-
-  function transport (level) {
-    var stream = new Passthrough()
-    transports[level].push(stream)
-    return stream
-  }
-
-  function all () {
-    var stream = new Passthrough()
-    for (var level in transports) {
+  // create a .pipe() for the `level`
+  function Pipe (level) {
+    level = level || '$all'
+    return function pipe (stream) {
+      if (!transports[level]) transports[level] = []
       transports[level].push(stream)
+      return logger
     }
-    return stream
   }
 
-  return rise
+  // create a .fields() for the `level`
+  function Fields (level) {
+    level = level || '$all'
+    return function field (obj) {
+      obj = obj || {}
+      if (!fields[level]) fields[level] = {}
+      fields[level] = assign(fields[level], obj)
+      return logger
+    }
+  }
+
+  // reset the transports and fields
+  function Reset () {
+    return function reset () {
+      for (let k in transports) delete transports[k]
+      for (let k in fields) delete fields[k]
+    }
+  }
 }
 
-function format (level, name, message) {
-  return JSON.stringify({
-    ts: (new Date()).toISOString(),
+/**
+ * Prepare the log
+ *
+ * TODO: should there be custom serialization support?
+ *
+ * @param {String} level
+ * @param {String} name
+ * @param {Array} args
+ */
+
+function prepare (level, name, args) {
+  let out = {
     level: level,
-    name: name,
-    msg: message,
-    host: hostname,
-    pid: pid
-  }) + '\n'
+    name: name
+  }
+
+  if (typeof args[0] === 'string') {
+    if (is_printf(args[0])) {
+      out.message = printf.apply(null, args)
+      return out
+    } else {
+      out.message = args.shift()
+    }
+  } else if (is_error(args[0])) {
+    let error = args.shift()
+    out = assign(out, {
+      err: {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      }
+    })
+  }
+
+  return args.reduce(function (out, fields) {
+    return assign(out, fields)
+  }, out)
 }
 
-var rise = Rise('app')
-rise.all().pipe(process.stdout)
-rise.info().pipe(process.stdout)
-rise.info().pipe(process.stdout)
-rise.error().pipe(process.stdout)
+/**
+ * Shallow copy specific to sutra's object shape
+ *
+ * @param {Object|Array} obj
+ * @return {Object|Array}
+ */
 
-var r = rise('zomg')
-r.info({ rofl: 'coptor' })
-rise.info('oh no!')
-rise.fatal('fatal!!')
+function copy (obj) {
+  let out = {}
+  for (let k in obj) {
+    out[k] = Array.isArray(obj[k])
+      ? [].concat(obj[k])
+      : assign({}, obj[k])
+  }
+  return out
+}
 
+/**
+ * Check if the value is an Error
+ *
+ * @param {Mixed} mixed
+ * @return {Boolean}
+ */
+
+function is_error(mixed) {
+  return Object.prototype.toString.call(mixed) === '[object Error]'
+    || mixed instanceof Error
+}

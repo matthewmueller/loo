@@ -1,29 +1,56 @@
 
-# rise
+# sutra
 
-  Minimalist streaming logger with multi-transport support
+  Minimalistic streaming logger with layered transport and custom field support.
 
-## License 
+  Uses the same output format as [bole](https://github.com/rvagg/bole), so tools like [bistre](https://github.com/hughsk/bistre) and [garnish](https://github.com/mattdesl/garnish) will work great.
 
-(The MIT License)
+## Installation
 
-Copyright (c) 2015 Matthew Mueller &lt;matt@lapwinglabs.com&gt;
+```bash
+npm i sutra
+```
 
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-'Software'), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
+## Example
 
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
+```js
+let log = require('sutra')
 
-THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// application logging
+let app = log('app')
+app.error.pipe(process.stderr)
+app.fatal.pipe(process.stderr)
+
+// component logging
+let postgres = app('postgres')
+postgres.debug.pipe(process.stdout)
+postgres.info.pipe(process.stdout)
+
+// add custom fields and log
+let query = 'SELECT * FROM teams'
+let client = Postgres(url)
+postgres.debug.fields({ client: client.id })
+postgres.debug('running query %s', query)
+```
+
+## Levels
+
+Here are the log levels that ship with sutra
+
+- trace: finer-grained informational events than the debug
+- debug: fine-grained informational events that are most useful to debug an application
+- info: informational messages that highlight the progress of the application at coarse-grained level
+- warn: potentially harmful situations
+- error: error events that might still allow the application to continue running.
+- fatal: very severe error events that will presumably lead the application to abort.
+
+## Tests
+
+```
+npm install
+npm test
+```
+
+## License
+
+MIT
