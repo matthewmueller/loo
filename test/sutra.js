@@ -203,66 +203,94 @@ describe('log', function() {
 
       root.end(() => a.end(() => b.end(() => c.end(() => done()))))
     })
+
+    it('fields', function(done) {
+      let root = bl()
+      let a = bl()
+      let b = bl()
+      let c = bl()
+
+      log.fields({ root: 'root' })
+      log.debug.pipe(root)
+      log.debug.fields({ root: 'debug' })
+
+      let la = log('la')
+      let lb = log('lb')
+
+      la.fields({ a: 'a' })
+      lb.warn.fields({ b: 'b'})
+
+      la.info.pipe(a)
+      lb.warn.pipe(b)
+
+      let lc = lb('lc')
+      lc.error.pipe(c)
+      lc.error.fields({ 'c': 'c' })
+
+      la.debug('lad')
+      la.info('lai')
+      la.error('lae')
+
+      lb.debug('lbd')
+      lb.warn('lbw')
+      lb.fatal('lbf')
+
+      lc.debug('lcd')
+      lc.info('lci')
+      lc.warn('lcw')
+      lc.error('lce')
+      lc.fatal('lcf')
+
+      eq(root, [
+        { level: 'debug', name: 'la', message: 'lad', a: 'a', root: 'debug' },
+        { level: 'debug', name: 'lb', message: 'lbd', root: 'debug' },
+        { level: 'debug', name: 'lb:lc', message: 'lcd', root: 'debug' }
+      ])
+
+      eq(a, [
+        { level: 'info', name: 'la', message: 'lai', a: 'a', root: 'root' }
+      ])
+
+      eq(b, [
+        { level: 'warn', name: 'lb', message: 'lbw', b: 'b', root: 'root' },
+        { level: 'warn', name: 'lb:lc', message: 'lcw', b: 'b', root: 'root' }
+      ])
+
+      eq(c, [
+        { level: 'error', name: 'lb:lc', message: 'lce', c: 'c', root: 'root' }
+      ])
+
+      root.end(() => a.end(() => b.end(() => c.end(() => done()))))
+    })
   })
 
-  it('fields', function(done) {
-    let root = bl()
-    let a = bl()
-    let b = bl()
-    let c = bl()
+  describe('fixes', function() {
+    it('should use references (#1)', function(done) {
+      let sink = bl()
+      let a = log('a')
+      log.pipe(sink)
+      a.info('a')
+      eq(sink, [
+        { level: 'info', name: 'a', message: 'a' }
+      ])
+      sink.end(done)
+    })
 
-    log.fields({ root: 'root' })
-    log.debug.pipe(root)
-    log.debug.fields({ root: 'debug' })
-
-    let la = log('la')
-    let lb = log('lb')
-
-    la.fields({ a: 'a' })
-    lb.warn.fields({ b: 'b'})
-
-    la.info.pipe(a)
-    lb.warn.pipe(b)
-
-    let lc = lb('lc')
-    lc.error.pipe(c)
-    lc.error.fields({ 'c': 'c' })
-
-    la.debug('lad')
-    la.info('lai')
-    la.error('lae')
-
-    lb.debug('lbd')
-    lb.warn('lbw')
-    lb.fatal('lbf')
-
-    lc.debug('lcd')
-    lc.info('lci')
-    lc.warn('lcw')
-    lc.error('lce')
-    lc.fatal('lcf')
-
-    eq(root, [
-      { level: 'debug', name: 'la', message: 'lad', root: 'debug', a: 'a' },
-      { level: 'debug', name: 'lb', message: 'lbd', root: 'debug' },
-      { level: 'debug', name: 'lb:lc', message: 'lcd', root: 'debug' }
-    ])
-
-    eq(a, [
-      { level: 'info', name: 'la', message: 'lai', root: 'root', a: 'a' }
-    ])
-
-    eq(b, [
-      { level: 'warn', name: 'lb', message: 'lbw', root: 'root', b: 'b' },
-      { level: 'warn', name: 'lb:lc', message: 'lcw', root: 'root', b: 'b' }
-    ])
-
-    eq(c, [
-      { level: 'error', name: 'lb:lc', message: 'lce', root: 'root', c: 'c' }
-    ])
-
-    root.end(() => a.end(() => b.end(() => c.end(() => done()))))
+    it('should use same pipes for same namespaces (#2)', function(done) {
+      let sink = bl()
+      let a = log('a')
+      a.pipe(sink)
+      a.info('a')
+      let b = log('a')
+      b.warn('b')
+      eq(sink, [
+        { level: 'info', name: 'a', message: 'a' },
+        { level: 'warn', name: 'a', message: 'b' }
+      ])
+      sink.end(done)
+    })
   })
+
 })
 
 function eq (actual, expected) {

@@ -9,6 +9,7 @@ let is_printf = require('./lib/is-printf')
 let assign = require('object-assign')
 let format = require('./lib/format')
 let printf = require('util').format
+let Tree = require('./lib/tree')
 let sliced = require('sliced')
 
 /**
@@ -27,22 +28,26 @@ module.exports = Logger('root')
  * @private true
  */
 
-function Logger (namespace, transports, fields) {
-  transports = transports ? copy(transports) : {}
-  fields = fields ? copy(fields) : {}
+function Logger (namespace, tree) {
+  tree = tree || Tree()
+
+  // add entry in the tree
+  if (!tree(namespace)) {
+    tree(namespace, { transports: {}, fields: {} })
+  }
 
   // create a logger
   function logger (ns) {
     let name = namespace.split(':')
-    name = name[0] === 'root' ? name.slice(1) : name
     ns = name.concat(ns).join(':')
-    return Logger(ns, transports, fields)
+    return Logger(ns, tree)
   }
 
   // go to all levels
   logger.fields = Fields()
   logger.reset = Reset()
   logger.pipe = Pipe()
+  logger.tree = tree
 
   // setup the levels
   levels.map(function (level) {
@@ -55,10 +60,22 @@ function Logger (namespace, transports, fields) {
   function Log (level) {
     function log (message) {
       let json = prepare(level, namespace, sliced(arguments))
-      json = assign(json, fields['$all'] || {}, fields[level] || {})
-      let globals = transports['$all'] || []
-      let locals = transports[level] || []
-      let streams = [].concat(locals).concat(globals)
+      let parents = tree.up(namespace)
+
+      let fields = parents.reduce(function (fields, parent) {
+        let all = parent.fields['$all'] || {}
+        let lvl = parent.fields[level] || {}
+        return assign({}, fields, all, lvl)
+      }, {})
+
+      // update the json fields
+      json = assign(json, fields)
+
+      let streams = parents.reduce(function (streams, parent) {
+        let all = parent.transports['$all'] || []
+        let lvl = parent.transports[level] || []
+        return streams.concat(lvl).concat(all)
+      }, [])
 
       for (let i = 0, stream; stream = streams[i]; i++) {
         stream.write(format(json))
@@ -75,6 +92,7 @@ function Logger (namespace, transports, fields) {
   function Pipe (level) {
     level = level || '$all'
     return function pipe (stream) {
+      let transports = tree(namespace).transports
       if (!transports[level]) transports[level] = []
       transports[level].push(stream)
       return logger
@@ -86,6 +104,7 @@ function Logger (namespace, transports, fields) {
     level = level || '$all'
     return function field (obj) {
       obj = obj || {}
+      let fields = tree(namespace).fields
       if (!fields[level]) fields[level] = {}
       fields[level] = assign(fields[level], obj)
       return logger
@@ -95,8 +114,8 @@ function Logger (namespace, transports, fields) {
   // reset the transports and fields
   function Reset () {
     return function reset () {
-      for (let k in transports) delete transports[k]
-      for (let k in fields) delete fields[k]
+      tree.reset()
+      tree('root', { transports: {}, fields: {} })
     }
   }
 }

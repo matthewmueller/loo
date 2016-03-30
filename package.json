@@ -18,7 +18,8 @@
   "dependencies": {
     "json-stringify-safe": "5.0.1",
     "object-assign": "4.0.1",
-    "sliced": "1.0.1"
+    "sliced": "1.0.1",
+    "split-string": "0.1.1"
   },
   "devDependencies": {
     "bl": "1.1.2",
