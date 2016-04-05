@@ -36,6 +36,11 @@ function Logger (namespace, tree) {
     tree(namespace, { transports: {}, fields: {} })
   }
 
+  // listen for sutra logs
+  if (namespace === 'root') {
+    process.on('sutra', write)
+  }
+
   // create a logger
   function logger (ns) {
     let name = namespace.split(':')
@@ -71,21 +76,29 @@ function Logger (namespace, tree) {
       // update the json fields
       json = assign(json, fields)
 
-      let streams = parents.reduce(function (streams, parent) {
-        let all = parent.transports['$all'] || []
-        let lvl = parent.transports[level] || []
-        return streams.concat(lvl).concat(all)
-      }, [])
-
-      for (let i = 0, stream; stream = streams[i]; i++) {
-        stream.write(format(json))
-      }
+      // send to the other listeners
+      process && process.emit
+        ? process.emit('sutra', json)
+        : write(json)
     }
 
     log.fields = Fields(level)
     log.pipe = Pipe(level)
 
     return log
+  }
+
+  function write (json, parents) {
+    parents = parents || tree.up(json.name)
+    let streams = parents.reduce(function (streams, parent) {
+      let all = parent.transports['$all'] || []
+      let lvl = parent.transports[json.level] || []
+      return streams.concat(lvl).concat(all)
+    }, [])
+
+    for (let i = 0, stream; stream = streams[i]; i++) {
+      stream.write(format(json))
+    }
   }
 
   // create a .pipe() for the `level`
