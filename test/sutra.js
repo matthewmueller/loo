@@ -289,18 +289,19 @@ describe('log', function() {
       ])
       sink.end(done)
     })
+
+    it('should send to all sutra instances on the process', function(done) {
+      let sink = bl()
+      let a = log('a')
+      log.pipe(sink)
+      process.emit('sutra', { level: 'info', name: 'root:a', message: 'a' })
+      eq(sink, [
+        { level: 'info', name: 'a', message: 'a' }
+      ])
+      sink.end(done)
+    })
   })
 
-  it('should send to all sutra instances on the process', function(done) {
-    let sink = bl()
-    let a = log('a')
-    log.pipe(sink)
-    process.emit('sutra', { level: 'info', name: 'root:a', message: 'a' })
-    eq(sink, [
-      { level: 'info', name: 'a', message: 'a' }
-    ])
-    sink.end(done)
-  })
 
 })
 
