@@ -1,4 +1,9 @@
 
+2.0.1 / 2016-04-24
+==================
+
+  * errors should also file in the log.message field
+
 2.0.0 / 2016-04-24
 ==================
 
