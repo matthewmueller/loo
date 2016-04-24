@@ -1,4 +1,11 @@
 
+2.0.0 / 2016-04-24
+==================
+
+  * all custom fields are under the 'fields' key.
+  * smarter logging: printf + custom fields now in same log
+  * fix test location
+
 1.1.1 / 2016-04-05
 ==================
 
