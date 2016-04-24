@@ -90,6 +90,7 @@ describe('log', function() {
         {
           level: 'fatal',
           name: 'root',
+          message: 'headshot',
           err: {
             name: 'Error',
             message: 'headshot',
@@ -99,6 +100,7 @@ describe('log', function() {
         {
           level: 'error',
           name: 'root',
+          message: 'SYNTAX: oh dear',
           err: {
             name: 'SyntaxError',
             message: 'oh dear',

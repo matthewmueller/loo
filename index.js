@@ -162,6 +162,15 @@ function prepare (level, name, args) {
     }
   } else if (is_error(args[0])) {
     let error = args.shift()
+
+    // attach to the message
+    if (!out.message) {
+      out.message = error.code
+        ? error.code + ': ' + error.message
+        : error.message
+    }
+
+    // attach the rest of the error
     out = assign(out, {
       err: {
         name: error.name,
