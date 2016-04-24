@@ -53,14 +53,14 @@ describe('log', function() {
       sink.end(done)
     })
 
-    it('obj', function(done) {
+    it('obj with custom field', function(done) {
       let sink = bl()
       log.pipe(sink)
       log.fatal({ message: 'some fatal!', line: 15 })
       log.error({ message: 'some error!', line: 20 })
       eq(sink, [
-        { level: 'fatal', name: 'root', message: 'some fatal!', line: 15 },
-        { level: 'error', name: 'root', message: 'some error!', line: 20 }
+        { level: 'fatal', name: 'root', message: 'some fatal!', fields: { line: 15 } },
+        { level: 'error', name: 'root', message: 'some error!', fields: { line: 20 } }
       ])
       sink.end(done)
     })
@@ -72,8 +72,8 @@ describe('log', function() {
       log.fatal({ message: 'some fatal!', line: 15 })
       log.error({ message: 'some error!', line: 20 })
       eq(sink, [
-        { level: 'fatal', name: 'root', message: 'some fatal!', line: 15, team: 'soloists' },
-        { level: 'error', name: 'root', message: 'some error!', line: 20, team: 'soloists' }
+        { level: 'fatal', name: 'root', message: 'some fatal!', fields: { line: 15, team: 'soloists' } },
+        { level: 'error', name: 'root', message: 'some error!', fields: { line: 20, team: 'soloists' } }
       ])
       sink.end(done)
     })
@@ -242,22 +242,22 @@ describe('log', function() {
       lc.fatal('lcf')
 
       eq(root, [
-        { level: 'debug', name: 'la', message: 'lad', a: 'a', root: 'debug' },
-        { level: 'debug', name: 'lb', message: 'lbd', root: 'debug' },
-        { level: 'debug', name: 'lb:lc', message: 'lcd', root: 'debug' }
+        { level: 'debug', name: 'la', message: 'lad', fields: { a: 'a', root: 'debug' } },
+        { level: 'debug', name: 'lb', message: 'lbd', fields: { root: 'debug' } },
+        { level: 'debug', name: 'lb:lc', message: 'lcd', fields: { root: 'debug' } }
       ])
 
       eq(a, [
-        { level: 'info', name: 'la', message: 'lai', a: 'a', root: 'root' }
+        { level: 'info', name: 'la', message: 'lai', fields: { a: 'a', root: 'root' } }
       ])
 
       eq(b, [
-        { level: 'warn', name: 'lb', message: 'lbw', b: 'b', root: 'root' },
-        { level: 'warn', name: 'lb:lc', message: 'lcw', b: 'b', root: 'root' }
+        { level: 'warn', name: 'lb', message: 'lbw', fields: { b: 'b', root: 'root' } },
+        { level: 'warn', name: 'lb:lc', message: 'lcw', fields: { b: 'b', root: 'root' } }
       ])
 
       eq(c, [
-        { level: 'error', name: 'lb:lc', message: 'lce', c: 'c', root: 'root' }
+        { level: 'error', name: 'lb:lc', message: 'lce', fields: { c: 'c', root: 'root' } }
       ])
 
       root.end(() => a.end(() => b.end(() => c.end(() => done()))))
@@ -302,6 +302,40 @@ describe('log', function() {
     })
   })
 
+  describe('smart formatting', function() {
+    it('should handle printf strings + fields', function(done) {
+      let sink = bl()
+      let a = log('a')
+      log.pipe(sink)
+
+      a.info('message %d %s: %j', 1, 'anh', { message: 'test' }, { another: 'field' })
+      eq(sink, [
+        { level: 'info', name: 'a', message: "message 1 anh: {\"message\":\"test\"}", "fields":{"another":"field"} }
+      ])
+      sink.end(done)
+    })
+
+    it('should throw if there arent enough args for printf', function(done) {
+      let a = log('a')
+      try {
+        a.info('message %d %s: %j', 1, 'anh')
+      } catch (e) {
+        assert.equal(e.message, 'log("root:a").info(...): Invalid number of parameters. Expected 4, got 3.')
+        done()
+      }
+    })
+
+    it('should not throw if there is an undefined value for one of the arguments', function(done) {
+      let sink = bl()
+      let a = log('a')
+      log.pipe(sink)
+      a.info('message %d %s: %j', undefined, 'anh', undefined, { another: 'field' })
+      eq(sink, [
+        { level: 'info', name: 'a', message: "message NaN anh: undefined", "fields":{"another":"field"} }
+      ])
+      sink.end(done)
+    })
+  })
 
 })
 

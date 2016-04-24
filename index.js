@@ -5,7 +5,7 @@
  */
 
 let levels = 'trace debug info warn error fatal'.split(' ')
-let is_printf = require('./lib/is-printf')
+let variables  = require('./lib/printf-variables')
 let assign = require('object-assign')
 let format = require('./lib/format')
 let printf = require('util').format
@@ -150,9 +150,13 @@ function prepare (level, name, args) {
   }
 
   if (typeof args[0] === 'string') {
-    if (is_printf(args[0])) {
-      out.message = printf.apply(null, args)
-      return out
+    let vars = variables(args[0])
+    if (vars !== null) {
+      if (args.length < vars.length + 1) {
+        throw new Error(`log("${name}").${level}(...): Invalid number of parameters. Expected ${vars.length + 1}, got ${args.length}.`)
+      }
+      out.message = printf.apply(null, args.slice(0, vars.length + 1))
+      args = args.slice(vars.length + 1)
     } else {
       out.message = args.shift()
     }
@@ -171,23 +175,6 @@ function prepare (level, name, args) {
   return args.reduce(function (out, fields) {
     return assign(out, fields)
   }, out)
-}
-
-/**
- * Shallow copy specific to sutra's object shape
- *
- * @param {Object|Array} obj
- * @return {Object|Array}
- */
-
-function copy (obj) {
-  let out = {}
-  for (let k in obj) {
-    out[k] = Array.isArray(obj[k])
-      ? [].concat(obj[k])
-      : assign({}, obj[k])
-  }
-  return out
 }
 
 /**
