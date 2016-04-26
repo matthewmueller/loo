@@ -16,13 +16,20 @@
     "url": "git://github.com/MatthewMueller/sutra.git"
   },
   "dependencies": {
+    "isobj": "1.0.0",
     "json-stringify-safe": "5.0.1",
     "object-assign": "4.0.1",
+    "readable-stream": "2.1.0",
     "sliced": "1.0.1",
-    "split-string": "0.1.1"
+    "split-string": "0.1.1",
+    "stream-write": "1.0.1"
   },
   "devDependencies": {
+    "@mnm/logger-papertrail": "1.0.3",
+    "@mnm/logger-slack": "1.0.1",
+    "bistre": "1.0.1",
     "bl": "1.1.2",
+    "envobj": "1.0.2",
     "mocha": "2.4.5"
   },
   "scripts": {

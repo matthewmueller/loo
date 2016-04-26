@@ -5,7 +5,10 @@
  */
 
 let levels = 'trace debug info warn error fatal'.split(' ')
+var Writable = require('readable-stream/writable')
 let variables  = require('./lib/printf-variables')
+let stringify = require('json-stringify-safe')
+let write_stream = require('stream-write')
 let assign = require('object-assign')
 let format = require('./lib/format')
 let printf = require('util').format
@@ -97,7 +100,15 @@ function Logger (namespace, tree) {
     }, [])
 
     for (let i = 0, stream; stream = streams[i]; i++) {
-      stream.write(format(json))
+      let log = is_object_mode(stream)
+        ? format(json)
+        : stringify(format(json)) + '\n'
+      write_stream(stream, log, next)
+    }
+
+    // TODO what should we do if the stream has an error?
+    function next (err) {
+      if (err) console.error(err)
     }
   }
 
@@ -108,6 +119,10 @@ function Logger (namespace, tree) {
       let transports = tree(namespace).transports
       if (!transports[level]) transports[level] = []
       transports[level].push(stream)
+      // TODO: ensure that it's a transform stream
+      // and not a writeable stream, where this
+      // probably wouldn't work
+      stream.pipe(sink())
       return logger
     }
   }
@@ -196,4 +211,29 @@ function prepare (level, name, args) {
 function is_error(mixed) {
   return Object.prototype.toString.call(mixed) === '[object Error]'
     || mixed instanceof Error
+}
+
+/**
+ * Check if the stream is in object-mode
+ *
+ * @param {Stream} stream
+ * @return {Boolean}
+ */
+
+function is_object_mode (stream) {
+  return stream._writableState
+    && stream._writableState.objectMode === true
+}
+
+/**
+ * Create a sink
+ */
+
+function sink () {
+  return new Writable({
+    objectMode: true,
+    write: function (file, enc, fn) {
+      fn()
+    }
+  })
 }
