@@ -1,10 +1,10 @@
 'use strict'
 
-let Papertrail = require('@mnm/logger-papertrail')
-let SlackLogger = require('@mnm/logger-slack')
+let Papertrail = require('loo-papertrail')
+let SlackLogger = require('loo-slack')
 let environment = require('envobj')
 let Pretty = require('bistre')
-let log = require('..')('jack:bot')
+let log = require('..')('bot')
 let Log = require('..')
 
 
