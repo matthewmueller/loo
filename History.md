@@ -1,4 +1,11 @@
 
+3.0.0 / 2016-05-25
+==================
+
+  * rename to loo and other various fixes
+  * BREAKING: there were a few field ordering changes,
+    you probably shouldnt rely on the order anyway
+
 2.0.2 / 2016-04-26
 ==================
 

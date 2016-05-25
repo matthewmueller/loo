@@ -1,6 +1,6 @@
 {
   "name": "loo",
-  "version": "2.0.2",
+  "version": "3.0.0",
   "description": "Minimalistic streaming logger with layered transport system",
   "keywords": [
     "logging",
@@ -27,8 +27,8 @@
     "tumbleweed": "0.0.2"
   },
   "devDependencies": {
-    "@mnm/logger-papertrail": "1.0.4",
-    "@mnm/logger-slack": "1.0.2",
+    "loo-papertrail": "1.0.4",
+    "loo-slack": "1.0.2",
     "bistre": "1.0.1",
     "bl": "1.1.2",
     "envobj": "1.0.2",
