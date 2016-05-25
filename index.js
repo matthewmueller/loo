@@ -6,14 +6,28 @@
 
 let levels = 'trace debug info warn error fatal'.split(' ')
 var Writable = require('readable-stream/writable')
-let variables  = require('./lib/printf-variables')
 let stringify = require('json-stringify-safe')
+let Emitter = require('events').EventEmitter
 let write_stream = require('stream-write')
+let arrange = require('./lib/arrange')
 let assign = require('object-assign')
-let format = require('./lib/format')
-let printf = require('util').format
+let tumble = require('tumbleweed')
 let Tree = require('./lib/tree')
 let sliced = require('sliced')
+
+/**
+ * Create a global bus to pass
+ * messages across node modules
+ * (within the same process)
+ */
+
+let bus = global['loo'] = (global['loo'] || new Emitter)
+
+/**
+ * We don't want complaints about listeners
+ */
+
+bus.setMaxListeners(0)
 
 /**
  * Export a `Logger` singleton
@@ -39,9 +53,9 @@ function Logger (namespace, tree) {
     tree(namespace, { transports: {}, fields: {} })
   }
 
-  // listen for sutra logs
+  // listen for loo logs
   if (namespace === 'root') {
-    process.on('sutra', write)
+    bus.on('log', write)
   }
 
   // create a logger
@@ -67,8 +81,8 @@ function Logger (namespace, tree) {
   // create the logger for the given `level`
   function Log (level) {
     function log (message) {
-      let json = prepare(level, namespace, sliced(arguments))
       let parents = tree.up(namespace)
+      let args = sliced(arguments)
 
       let fields = parents.reduce(function (fields, parent) {
         let all = parent.fields['$all'] || {}
@@ -76,13 +90,18 @@ function Logger (namespace, tree) {
         return assign({}, fields, all, lvl)
       }, {})
 
+      args = Object.keys(fields).length
+        ? [fields].concat(args)
+        : args
+
       // update the json fields
-      json = assign(json, fields)
+      let json = assign(tumble(args), {
+        level: level,
+        name: namespace
+      })
 
       // send to the other listeners
-      process && process.emit
-        ? process.emit('sutra', json)
-        : write(json)
+      bus.emit('log', json)
     }
 
     log.fields = Fields(level)
@@ -101,8 +120,8 @@ function Logger (namespace, tree) {
 
     for (let i = 0, stream; stream = streams[i]; i++) {
       let log = is_object_mode(stream)
-        ? format(json)
-        : stringify(format(json)) + '\n'
+        ? arrange(json)
+        : stringify(arrange(json)) + '\n'
       write_stream(stream, log, next)
     }
 
@@ -146,71 +165,6 @@ function Logger (namespace, tree) {
       tree('root', { transports: {}, fields: {} })
     }
   }
-}
-
-/**
- * Prepare the log
- *
- * TODO: should there be custom serialization support?
- *
- * @param {String} level
- * @param {String} name
- * @param {Array} args
- */
-
-function prepare (level, name, args) {
-  let out = {
-    level: level,
-    name: name
-  }
-
-  if (typeof args[0] === 'string') {
-    let vars = variables(args[0])
-    if (vars !== null) {
-      if (args.length < vars.length + 1) {
-        throw new Error(`log("${name}").${level}(...): Invalid number of parameters. Expected ${vars.length + 1}, got ${args.length}.`)
-      }
-      out.message = printf.apply(null, args.slice(0, vars.length + 1))
-      args = args.slice(vars.length + 1)
-    } else {
-      out.message = args.shift()
-    }
-  } else if (is_error(args[0])) {
-    let error = args.shift()
-
-    // attach to the message
-    if (!out.message) {
-      out.message = error.code
-        ? error.code + ': ' + error.message
-        : error.message
-    }
-
-    // attach the rest of the error
-    out = assign(out, {
-      err: {
-        name: error.name,
-        message: error.message,
-        code: error.code,
-        stack: error.stack
-      }
-    })
-  }
-
-  return args.reduce(function (out, fields) {
-    return assign(out, fields)
-  }, out)
-}
-
-/**
- * Check if the value is an Error
- *
- * @param {Mixed} mixed
- * @return {Boolean}
- */
-
-function is_error(mixed) {
-  return Object.prototype.toString.call(mixed) === '[object Error]'
-    || mixed instanceof Error
 }
 
 /**

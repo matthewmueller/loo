@@ -32,3 +32,5 @@ lc.info('lci')
 lc.warn('lcw')
 lc.error('lce')
 lc.fatal('lcf')
+
+la.info(0)

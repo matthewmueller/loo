@@ -1,7 +1,7 @@
 {
-  "name": "sutra",
+  "name": "loo",
   "version": "2.0.2",
-  "description": "Minimalistic streaming logger with layered transport support",
+  "description": "Minimalistic streaming logger with layered transport system",
   "keywords": [
     "logging",
     "transports",
@@ -13,20 +13,22 @@
   "author": "Matthew Mueller <mattmuelle@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "git://github.com/MatthewMueller/sutra.git"
+    "url": "git://github.com/MatthewMueller/loo.git"
   },
   "dependencies": {
+    "events": "1.1.0",
     "isobj": "1.0.0",
     "json-stringify-safe": "5.0.1",
-    "object-assign": "4.0.1",
-    "readable-stream": "2.1.0",
+    "object-assign": "4.1.0",
+    "readable-stream": "2.1.2",
     "sliced": "1.0.1",
     "split-string": "0.1.1",
-    "stream-write": "1.0.1"
+    "stream-write": "1.0.1",
+    "tumbleweed": "0.0.2"
   },
   "devDependencies": {
-    "@mnm/logger-papertrail": "1.0.3",
-    "@mnm/logger-slack": "1.0.1",
+    "@mnm/logger-papertrail": "1.0.4",
+    "@mnm/logger-slack": "1.0.2",
     "bistre": "1.0.1",
     "bl": "1.1.2",
     "envobj": "1.0.2",

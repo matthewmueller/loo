@@ -19,7 +19,7 @@
 1.1.1 / 2016-04-05
 ==================
 
-  * listen for all instances of sutra on an existing process
+  * listen for all instances of loo on an existing process
   * update history
 
 1.1.0 / 2016-03-30

@@ -72,8 +72,8 @@ describe('log', function() {
       log.fatal({ message: 'some fatal!', line: 15 })
       log.error({ message: 'some error!', line: 20 })
       eq(sink, [
-        { level: 'fatal', name: 'root', message: 'some fatal!', fields: { line: 15, team: 'soloists' } },
-        { level: 'error', name: 'root', message: 'some error!', fields: { line: 20, team: 'soloists' } }
+        { level: 'fatal', name: 'root', message: 'some fatal!', fields: { team: 'soloists', line: 15 } },
+        { level: 'error', name: 'root', message: 'some error!', fields: { team: 'soloists', line: 20 } }
       ])
       sink.end(done)
     })
@@ -292,11 +292,11 @@ describe('log', function() {
       sink.end(done)
     })
 
-    it('should send to all sutra instances on the process', function(done) {
+    it('should send to all loo instances on the process', function(done) {
       let sink = bl()
       let a = log('a')
       log.pipe(sink)
-      process.emit('sutra', { level: 'info', name: 'root:a', message: 'a' })
+      global['loo'].emit('log', { level: 'info', name: 'root:a', message: 'a' })
       eq(sink, [
         { level: 'info', name: 'a', message: 'a' }
       ])
@@ -317,23 +317,39 @@ describe('log', function() {
       sink.end(done)
     })
 
-    it('should throw if there arent enough args for printf', function(done) {
+    it('should ignore if there arent enough args for printf', function(done) {
+      let sink = bl()
       let a = log('a')
-      try {
-        a.info('message %d %s: %j', 1, 'anh')
-      } catch (e) {
-        assert.equal(e.message, 'log("root:a").info(...): Invalid number of parameters. Expected 4, got 3.')
-        done()
-      }
+      log.pipe(sink)
+      a.info('message %d %s: %j', 1, 'anh')
+      eq(sink, [
+        {"level":"info","name":"a","message":"message 1 anh: %j","host":"matt"}
+      ])
+      sink.end(done)
     })
 
-    it('should not throw if there is an undefined value for one of the arguments', function(done) {
+    it('should ignore if there is an undefined value for one of the arguments', function(done) {
       let sink = bl()
       let a = log('a')
       log.pipe(sink)
       a.info('message %d %s: %j', undefined, 'anh', undefined, { another: 'field' })
       eq(sink, [
         { level: 'info', name: 'a', message: "message NaN anh: undefined", "fields":{"another":"field"} }
+      ])
+      sink.end(done)
+    })
+
+    it('should handle log.info(0) and log.info(undefined) and log.info(null)', function(done) {
+      let sink = bl()
+      let a = log('a')
+      log.pipe(sink)
+      a.info(0)
+      a.info(null)
+      a.info(undefined)
+      eq(sink, [
+        {"level":"info","name":"a","message":0,"host":"matt"},
+        {"level":"info","name":"a","message":null,"host":"matt"},
+        {"level":"info","name":"a","host":"matt"}
       ])
       sink.end(done)
     })

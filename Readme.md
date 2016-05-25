@@ -1,20 +1,20 @@
 
-# sutra
+# loo
 
-  Minimalistic streaming logger with layered transport and custom field support.
+  Minimalistic streaming logger with a layered transport and custom field support.
 
   Uses the same output format as [bole](https://github.com/rvagg/bole), so tools like [bistre](https://github.com/hughsk/bistre) and [garnish](https://github.com/mattdesl/garnish) will work great.
 
 ## Installation
 
 ```bash
-npm i sutra
+npm i loo
 ```
 
 ## Example
 
 ```js
-let log = require('sutra')
+let log = require('loo')
 
 // application logging
 let app = log('app')
