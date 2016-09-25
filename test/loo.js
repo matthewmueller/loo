@@ -22,14 +22,13 @@ let pid = process.pid
  * Tests
  */
 
-describe('log', function() {
+describe('log', function () {
   afterEach(function () {
     log.reset()
   })
 
-  describe('global', function() {
-
-    it('strings', function(done) {
+  describe('global', function () {
+    it('strings', function (done) {
       let sink = bl()
       log.pipe(sink)
       log.debug('debug!')
@@ -41,7 +40,7 @@ describe('log', function() {
       sink.end(done)
     })
 
-    it('printf', function(done) {
+    it('printf', function (done) {
       let sink = bl()
       log.pipe(sink)
       log.debug('%s!', 'debug')
@@ -53,7 +52,7 @@ describe('log', function() {
       sink.end(done)
     })
 
-    it('obj with custom field', function(done) {
+    it('obj with custom field', function (done) {
       let sink = bl()
       log.pipe(sink)
       log.fatal({ message: 'some fatal!', line: 15 })
@@ -65,7 +64,7 @@ describe('log', function() {
       sink.end(done)
     })
 
-    it('fields', function(done) {
+    it('fields', function (done) {
       let sink = bl()
       log.pipe(sink)
       log.fields({ team: 'soloists' })
@@ -78,7 +77,7 @@ describe('log', function() {
       sink.end(done)
     })
 
-    it('errors', function(done) {
+    it('errors', function (done) {
       let sink = bl()
       log.pipe(sink)
       log.fatal(new Error('headshot'))
@@ -92,8 +91,8 @@ describe('log', function() {
           name: 'root',
           message: 'headshot',
           err: {
-            name: 'Error',
             message: 'headshot',
+            name: 'Error',
             stack: 'STACK'
           }
         },
@@ -102,8 +101,8 @@ describe('log', function() {
           name: 'root',
           message: 'SYNTAX: oh dear',
           err: {
-            name: 'SyntaxError',
             message: 'oh dear',
+            name: 'SyntaxError',
             code: 'SYNTAX',
             stack: 'STACK'
           }
@@ -114,8 +113,8 @@ describe('log', function() {
     })
   })
 
-  describe('tree', function() {
-    it('any', function(done) {
+  describe('tree', function () {
+    it('any', function (done) {
       let root = bl()
       let a = bl()
       let b = bl()
@@ -153,7 +152,7 @@ describe('log', function() {
       root.end(() => a.end(() => b.end(() => c.end(() => done()))))
     })
 
-    it('levels', function(done) {
+    it('levels', function (done) {
       let root = bl()
       let a = bl()
       let b = bl()
@@ -206,7 +205,7 @@ describe('log', function() {
       root.end(() => a.end(() => b.end(() => c.end(() => done()))))
     })
 
-    it('fields', function(done) {
+    it('fields', function (done) {
       let root = bl()
       let a = bl()
       let b = bl()
@@ -266,8 +265,8 @@ describe('log', function() {
     })
   })
 
-  describe('fixes', function() {
-    it('should use references (#1)', function(done) {
+  describe('fixes', function () {
+    it('should use references (#1)', function (done) {
       let sink = bl()
       let a = log('a')
       log.pipe(sink)
@@ -278,7 +277,7 @@ describe('log', function() {
       sink.end(done)
     })
 
-    it('should use same pipes for same namespaces (#2)', function(done) {
+    it('should use same pipes for same namespaces (#2)', function (done) {
       let sink = bl()
       let a = log('a')
       a.pipe(sink)
@@ -292,7 +291,7 @@ describe('log', function() {
       sink.end(done)
     })
 
-    it('should send to all loo instances on the process', function(done) {
+    it('should send to all loo instances on the process', function (done) {
       let sink = bl()
       let a = log('a')
       log.pipe(sink)
@@ -304,42 +303,42 @@ describe('log', function() {
     })
   })
 
-  describe('smart formatting', function() {
-    it('should handle printf strings + fields', function(done) {
+  describe('smart formatting', function () {
+    it('should handle printf strings + fields', function (done) {
       let sink = bl()
       let a = log('a')
       log.pipe(sink)
 
       a.info('message %d %s: %j', 1, 'anh', { message: 'test' }, { another: 'field' })
       eq(sink, [
-        { level: 'info', name: 'a', message: "message 1 anh: {\"message\":\"test\"}", "fields":{"another":"field"} }
+        { level: 'info', name: 'a', message: 'message 1 anh: {"message":"test"}', 'fields': {'another': 'field'} }
       ])
       sink.end(done)
     })
 
-    it('should ignore if there arent enough args for printf', function(done) {
+    it('should ignore if there arent enough args for printf', function (done) {
       let sink = bl()
       let a = log('a')
       log.pipe(sink)
       a.info('message %d %s: %j', 1, 'anh')
       eq(sink, [
-        {"level":"info","name":"a","message":"message 1 anh: %j","host":"matt"}
+        {'level': 'info','name': 'a','message': 'message 1 anh: %j','host': 'matt'}
       ])
       sink.end(done)
     })
 
-    it('should ignore if there is an undefined value for one of the arguments', function(done) {
+    it('should ignore if there is an undefined value for one of the arguments', function (done) {
       let sink = bl()
       let a = log('a')
       log.pipe(sink)
       a.info('message %d %s: %j', undefined, 'anh', undefined, { another: 'field' })
       eq(sink, [
-        { level: 'info', name: 'a', message: "message NaN anh: undefined", "fields":{"another":"field"} }
+        { level: 'info', name: 'a', message: 'message NaN anh: undefined', 'fields': {'another': 'field'} }
       ])
       sink.end(done)
     })
 
-    it('should handle log.info(0) and log.info(undefined) and log.info(null)', function(done) {
+    it('should handle log.info(0) and log.info(undefined) and log.info(null)', function (done) {
       let sink = bl()
       let a = log('a')
       log.pipe(sink)
@@ -347,9 +346,9 @@ describe('log', function() {
       a.info(null)
       a.info(undefined)
       eq(sink, [
-        {"level":"info","name":"a","message":0,"host":"matt"},
-        {"level":"info","name":"a","message":null,"host":"matt"},
-        {"level":"info","name":"a","host":"matt"}
+        {'level': 'info','name': 'a','message': 0,'host': 'matt'},
+        {'level': 'info','name': 'a','message': null,'host': 'matt'},
+        {'level': 'info','name': 'a','host': 'matt'}
       ])
       sink.end(done)
     })
@@ -377,7 +376,7 @@ function string (sink) {
 
 function safe (str) {
   return str
-    .replace(/("time":"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.)\d{3}Z"/g, '$1xxxZ')
+    .replace(/("time":"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}):\d{2}\.\d{3}Z"/g, '$1:xx.xxxZ')
     .replace(/("remoteAddress":")(?:::ffff:)?(127.0.0.1")/g, '$1$2')
     .replace(/("host":")(?:(?:localhost)|(?:::))(:\d+")/g, '$1$2')
     .replace(/("stack":")SyntaxError:[^"]+/, '$1STACK')

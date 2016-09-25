@@ -16,23 +16,23 @@
     "url": "git://github.com/MatthewMueller/loo.git"
   },
   "dependencies": {
-    "events": "1.1.0",
+    "events": "1.1.1",
     "isobj": "1.0.0",
     "json-stringify-safe": "5.0.1",
     "object-assign": "4.1.0",
-    "readable-stream": "2.1.2",
+    "readable-stream": "2.1.5",
     "sliced": "1.0.1",
     "split-string": "0.1.1",
     "stream-write": "1.0.1",
-    "tumbleweed": "0.0.2"
+    "tumbleweed": "0.0.4"
   },
   "devDependencies": {
-    "loo-papertrail": "1.0.4",
+    "loo-papertrail": "1.0.5",
     "loo-slack": "1.0.2",
     "bistre": "1.0.1",
     "bl": "1.1.2",
     "envobj": "1.0.2",
-    "mocha": "2.4.5"
+    "mocha": "3.0.2"
   },
   "scripts": {
     "test": "make test"
