@@ -1,4 +1,11 @@
 
+4.0.0 / 2016-09-25
+==================
+
+  * BREAKING: update tests for latest tumbleweed,
+    message and err get pulled out of objects now
+  * fixed tests and added back in node 4 support
+
 3.0.0 / 2016-05-25
 ==================
 
